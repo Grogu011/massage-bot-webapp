@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запись на прием - Массаж и процедуры</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4a5568;
+            font-size: 24px;
+        }
+        
+        h2 {
+            margin: 15px 0 10px 0;
+            color: #2d3748;
+            font-size: 18px;
+        }
+        
+        .step {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-back {
+            background: #718096;
+            margin-top: 15px;
+        }
+        
+        .btn-back:hover {
+            background: #4a5568;
+            transform: translateY(-2px);
+        }
+        
+        .procedure-type {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .procedure-type:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
+        }
+        
+        .procedure-type.selected {
+            background: #ebf4ff;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .procedure-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .procedure-item:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+        
+        .procedure-item.selected {
+            background: #ebf4ff;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        
+        .price {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        
+        .duration {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin: 15px 0;
+        }
+        
+        .calendar-day {
+            padding: 10px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #f7fafc;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .calendar-day:hover {
+            background: #edf2f7;
+            transform: scale(1.05);
+        }
+        
+        .calendar-day.selected {
+            background: #667eea;
+            color: white;
+            border-color: #553c9a;
+        }
+        
+        .calendar-day.weekend {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .calendar-day.disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .time-slot {
+            padding: 15px;
+            margin: 8px 0;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .time-slot:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
+        }
+        
+        .time-slot.selected {
+            background: #667eea;
+            color: white;
+            border-color: #553c9a;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .time-slot.disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .confirmation-card {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .confirmation-item {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .confirmation-label {
+            color: #718096;
+            font-weight: 500;
+        }
+        
+        .confirmation-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        .total-price {
+            font-size: 20px;
+            color: #667eea;
+            font-weight: 700;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шаг 1: Выбор типа процедуры -->
+        <div class="step active" id="step1">
+            <h1>🎯 Выберите тип процедуры</h1>
+            
+            <div class="procedure-type" onclick="selectProcedureType('massage')">
+                <h2>💆‍♂️ Массаж</h2>
+                <p>Расслабляющие и лечебные массажные процедуры</p>
+            </div>
+            
+            <div class="procedure-type" onclick="selectProcedureType('injections')">
+                <h2>💉 Уколы</h2>
+                <p>Медицинские инъекции и терапия</p>
+            </div>
+            
+            <div class="procedure-type" onclick="selectProcedureType('hirudotherapy')">
+                <h2>🐍 Гирудотерапия</h2>
+                <p>Лечение медицинскими пиявками</p>
+            </div>
+        </div>
+
+        <!-- Шаг 2: Выбор конкретной процедуры -->
+        <div class="step" id="step2">
+            <h1>📋 Выберите процедуру</h1>
+            <div id="proceduresList"></div>
+            <button class="btn btn-back" onclick="goToStep(1)">← Назад</button>
+        </div>
+
+        <!-- Шаг 3: Выбор даты -->
+        <div class="step" id="step3">
+            <h1>📅 Выберите дату</h1>
+            <div id="calendar"></div>
+            <button class="btn btn-back" onclick="goToStep(2)">← Назад</button>
+        </div>
+
+        <!-- Шаг 4: Выбор времени -->
+        <div class="step" id="step4">
+            <h1>⏰ Выберите время</h1>
+            <div id="timeSlots"></div>
+            <button class="btn btn-back" onclick="goToStep(3)">← Назад</button>
+        </div>
+
+        <!-- Шаг 5: Подтверждение -->
+        <div class="step" id="step5">
+            <h1>✅ Подтверждение записи</h1>
+            <div class="confirmation-card">
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Процедура:</span>
+                    <span class="confirmation-value" id="confirmProcedure"></span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Дата:</span>
+                    <span class="confirmation-value" id="confirmDate"></span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Время:</span>
+                    <span class="confirmation-value" id="confirmTime"></span>
+                </div>
+                <div class="confirmation-item">
+                    <span class="confirmation-label">Длительность:</span>
+                    <span class="confirmation-value" id="confirmDuration"></span>
+                </div>
+            </div>
+            
+            <div class="total-price" id="confirmPrice"></div>
+            
+            <button class="btn" onclick="confirmAppointment()">✅ Подтвердить запись</button>
+            <button class="btn btn-back" onclick="goToStep(4)">← Назад</button>
+        </div>
+
+        <!-- Шаг 6: Успех -->
+        <div class="step" id="step6">
+            <h1>🎉 Запись создана!</h1>
+            <div style="text-align: center; padding: 30px;">
+                <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
+                <p>Ваша запись успешно создана!</p>
+                <p>Мы ждем вас в указанное время.</p>
+                <p>Напоминание придет за день до визита.</p>
+            </div>
+            <button class="btn" onclick="closeWebApp()">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        // Данные процедур
+        const procedureData = {
+            'massage': [
+                { id: 1, name: 'Классический массаж', price: 1000, duration: '60 минут', description: 'Расслабляющий общий массаж всего тела' },
+                { id: 2, name: 'Спортивный массаж', price: 1500, duration: '90 минут', description: 'Интенсивный массаж для спортсменов' },
+                { id: 3, name: 'Расслабляющий массаж', price: 1200, duration: '60 минут', description: 'Нежный массаж для релаксации' },
+                { id: 4, name: 'Лечебный массаж', price: 1800, duration: '75 минут', description: 'Массаж для лечения проблем со спиной' }
+            ],
+            'injections': [
+                { id: 5, name: 'Озонотерапия', price: 2000, duration: '30 минут', description: 'Лечение озоном' },
+                { id: 6, name: 'Мезотерапия', price: 2500, duration: '45 минут', description: 'Косметические инъекции' },
+                { id: 7, name: 'Витаминные капельницы', price: 3000, duration: '60 минут', description: 'Внутривенные витаминные комплексы' }
+            ],
+            'hirudotherapy': [
+                { id: 8, name: 'Гирудотерапия (стандарт)', price: 1800, duration: '60 минут', description: 'Лечение медицинскими пиявками' },
+                { id: 9, name: 'Гирудотерапия (расширенная)', price: 2500, duration: '90 минут', description: 'Расширенный сеанс гирудотерапии' }
+            ]
+        };
+
+        // Текущий выбор пользователя
+        let currentSelection = {
+            procedureType: null,
+            procedure: null,
+            date: null,
+            time: null
+        };
+
+        // Инициализация WebApp
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        Telegram.WebApp.enableClosingConfirmation();
+
+        // Функции для навигации
+        function goToStep(stepNumber) {
+            // Скрываем все шаги
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Показываем нужный шаг
+            document.getElementById('step' + stepNumber).classList.add('active');
+            
+            // Загружаем данные для шага
+            loadStepData(stepNumber);
+        }
+
+        function loadStepData(stepNumber) {
+            switch(stepNumber) {
+                case 2:
+                    loadProcedures();
+                    break;
+                case 3:
+                    loadCalendar();
+                    break;
+                case 4:
+                    loadTimeSlots();
+                    break;
+                case 5:
+                    showConfirmation();
+                    break;
+            }
+        }
+
+        function selectProcedureType(type) {
+            currentSelection.procedureType = type;
+            goToStep(2);
+        }
+
+        function loadProcedures() {
+            const procedures = procedureData[currentSelection.procedureType];
+            const container = document.getElementById('proceduresList');
+            
+            container.innerHTML = '';
+            procedures.forEach(proc => {
+                container.innerHTML += `
+                    <div class="procedure-item" onclick="selectProcedure(${proc.id})">
+                        <h3>${proc.name}</h3>
+                        <p>${proc.description}</p>
+                        <div class="price">💰 ${proc.price} руб</div>
+                        <div class="duration">⏰ ${proc.duration}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function selectProcedure(procId) {
+            const procedures = procedureData[currentSelection.procedureType];
+            currentSelection.procedure = procedures.find(p => p.id === procId);
+            goToStep(3);
+        }
+
+        function loadCalendar() {
+            const calendar = document.getElementById('calendar');
+            const today = new Date();
+            
+            // Простой календарь на ближайшие 30 дней
+            let calendarHTML = '<div class="calendar">';
+            
+            for (let i = 0; i < 30; i++) {
+                const date = new Date();
+                date.setDate(today.getDate() + i);
+                
+                const day = date.getDate();
+                const month = date.getMonth() + 1;
+                const year = date.getFullYear();
+                const dayOfWeek = date.getDay();
+                
+                const dateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const isToday = i === 0;
+                
+                calendarHTML += `
+                    <div class="calendar-day ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''}" 
+                         onclick="selectDate('${dateString}')">
+                        ${day}
+                    </div>
+                `;
+            }
+            
+            calendarHTML += '</div>';
+            calendar.innerHTML = calendarHTML;
+        }
+
+        function selectDate(date) {
+            currentSelection.date = date;
+            goToStep(4);
+        }
+
+        function loadTimeSlots() {
+            const timeSlots = document.getElementById('timeSlots');
+            const times = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+            
+            timeSlots.innerHTML = '';
+            times.forEach(time => {
+                timeSlots.innerHTML += `
+                    <div class="time-slot" onclick="selectTime('${time}')">
+                        ${time}
+                    </div>
+                `;
+            });
+        }
+
+        function selectTime(time) {
+            currentSelection.time = time;
+            goToStep(5);
+        }
+
+        function showConfirmation() {
+            document.getElementById('confirmProcedure').textContent = currentSelection.procedure.name;
+            document.getElementById('confirmDate').textContent = formatDate(currentSelection.date);
+            document.getElementById('confirmTime').textContent = currentSelection.time;
+            document.getElementById('confirmDuration').textContent = currentSelection.procedure.duration;
+            document.getElementById('confirmPrice').textContent = `Итого: ${currentSelection.procedure.price} руб`;
+        }
+
+        function formatDate(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}.${month}.${year}`;
+        }
+
+        function confirmAppointment() {
+            // Здесь будет отправка данных на сервер
+            console.log('Запись создана:', currentSelection);
+            
+            // Показываем экран успеха
+            goToStep(6);
+            
+            // Здесь можно отправить данные обратно в бота
+            // Telegram.WebApp.sendData(JSON.stringify(currentSelection));
+        }
+
+        function closeWebApp() {
+            Telegram.WebApp.close();
+        }
+
+        // Инициализация
+        console.log('WebApp для записи на прием загружен!');
+        // Функции для работы с API
+async function loadProceduresFromAPI() {
+    try {
+        const response = await fetch('/api/procedures/massage');
+        if (!response.ok) throw new Error('Ошибка загрузки процедур');
+        return await response.json();
+    } catch (error) {
+        console.error('Error loading procedures:', error);
+        return procedureData; // fallback to local data
+    }
+}
+
+async function createAppointmentAPI(appointmentData) {
+    try {
+        const response = await fetch('/api/appointments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(appointmentData)
+        });
+        
+        if (!response.ok) throw new Error('Ошибка создания записи');
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating appointment:', error);
+        throw error;
+    }
+}
+
+// Обновляем функцию confirmAppointment
+async function confirmAppointment() {
+    try {
+        const appointmentData = {
+            procedure_id: currentSelection.procedure.id,
+            appointment_date: `${currentSelection.date}T${currentSelection.time}:00`,
+            user: {
+                telegram_id: Telegram.WebApp.initDataUnsafe.user.id,
+                username: Telegram.WebApp.initDataUnsafe.user.username,
+                first_name: Telegram.WebApp.initDataUnsafe.user.first_name
+            }
+        };
+        
+        const result = await createAppointmentAPI(appointmentData);
+        console.log('Запись создана:', result);
+        
+        goToStep(6);
+        
+    } catch (error) {
+        alert('Ошибка при создании записи. Попробуйте еще раз.');
+        console.error('Appointment error:', error);
+    }
+}
+    </script>
+</body>
+</html>
