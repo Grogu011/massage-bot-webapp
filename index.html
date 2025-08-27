@@ -507,14 +507,31 @@
         }
 
         function confirmAppointment() {
-            // Здесь будет отправка данных на сервер
-            console.log('Запись создана:', currentSelection);
-            
-            // Показываем экран успеха
-            goToStep(6);
-            
-            // Здесь можно отправить данные обратно в бота
-            // Telegram.WebApp.sendData(JSON.stringify(currentSelection));
+            try {
+                const appointmentData = {
+                    type: 'appointment',
+                    procedure: currentSelection.procedure,
+                    date: currentSelection.date,
+                    time: currentSelection.time,
+                    user: {
+                        id: Telegram.WebApp.initDataUnsafe.user.id,
+                        username: Telegram.WebApp.initDataUnsafe.user.username,
+                        first_name: Telegram.WebApp.initDataUnsafe.user.first_name
+                    }
+                };
+                
+                console.log('Отправляем данные в бота:', appointmentData);
+                
+                // Отправляем данные обратно в бота
+                Telegram.WebApp.sendData(JSON.stringify(appointmentData));
+                
+                // Показываем экран успеха
+                goToStep(6);
+                
+            } catch (error) {
+                console.error('Ошибка при создании записи:', error);
+                alert('Ошибка при создании записи. Попробуйте еще раз.');
+            }
         }
 
         function closeWebApp() {
@@ -523,59 +540,6 @@
 
         // Инициализация
         console.log('WebApp для записи на прием загружен!');
-        // Функции для работы с API
-async function loadProceduresFromAPI() {
-    try {
-        const response = await fetch('/api/procedures/massage');
-        if (!response.ok) throw new Error('Ошибка загрузки процедур');
-        return await response.json();
-    } catch (error) {
-        console.error('Error loading procedures:', error);
-        return procedureData; // fallback to local data
-    }
-}
-
-async function createAppointmentAPI(appointmentData) {
-    try {
-        const response = await fetch('/api/appointments', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(appointmentData)
-        });
-        
-        if (!response.ok) throw new Error('Ошибка создания записи');
-        return await response.json();
-    } catch (error) {
-        console.error('Error creating appointment:', error);
-        throw error;
-    }
-}
-
-// Обновляем функцию confirmAppointment
-async function confirmAppointment() {
-    try {
-        const appointmentData = {
-            procedure_id: currentSelection.procedure.id,
-            appointment_date: `${currentSelection.date}T${currentSelection.time}:00`,
-            user: {
-                telegram_id: Telegram.WebApp.initDataUnsafe.user.id,
-                username: Telegram.WebApp.initDataUnsafe.user.username,
-                first_name: Telegram.WebApp.initDataUnsafe.user.first_name
-            }
-        };
-        
-        const result = await createAppointmentAPI(appointmentData);
-        console.log('Запись создана:', result);
-        
-        goToStep(6);
-        
-    } catch (error) {
-        alert('Ошибка при создании записи. Попробуйте еще раз.');
-        console.error('Appointment error:', error);
-    }
-}
     </script>
 </body>
 </html>
