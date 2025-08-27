@@ -214,7 +214,7 @@
         
         .appointment-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
@@ -249,6 +249,21 @@
         .status-cancelled {
             background: #f56565;
             color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #a0aec0;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
         }
     </style>
 </head>
@@ -383,75 +398,50 @@
         
         // Загрузка статистики
         async function loadStats() {
-    try {
-        const response = await fetch('/api/admin/stats');
-        if (!response.ok) throw new Error('Ошибка загрузки статистики');
-        
-        const stats = await response.json();
-        
-        document.getElementById('totalAppointments').textContent = stats.total_appointments;
-        document.getElementById('todayAppointments').textContent = stats.today_appointments;
-        document.getElementById('totalUsers').textContent = stats.total_users;
-        document.getElementById('totalRevenue').textContent = stats.total_revenue.toLocaleString();
-        
-        Telegram.WebApp.showPopup({
-            title: '✅ Обновлено',
-            message: 'Статистика успешно обновлена',
-            buttons: [{ type: 'ok' }]
-        });
-        
-    } catch (error) {
-        console.error('Error loading stats:', error);
-        Telegram.WebApp.showPopup({
-            title: '❌ Ошибка',
-            message: 'Не удалось загрузить статистику',
-            buttons: [{ type: 'ok' }]
-        });
-    }
-}
+            // Временные данные для теста
+            document.getElementById('totalAppointments').textContent = '25';
+            document.getElementById('todayAppointments').textContent = '3';
+            document.getElementById('totalUsers').textContent = '18';
+            document.getElementById('totalRevenue').textContent = '42,500';
+            
+            console.log('Статистика загружена (тестовые данные)');
+        }
         
         // Загрузка записей
         async function loadAppointments() {
-    const list = document.getElementById('appointmentsList');
-    list.innerHTML = '<div class="loading">Загрузка записей...</div>';
-    
-    try {
-        const response = await fetch('/api/admin/appointments');
-        if (!response.ok) throw new Error('Ошибка загрузки записей');
-        
-        const appointments = await response.json();
-        
-        if (appointments.length === 0) {
-            list.innerHTML = '<div class="loading">Записей нет</div>';
-            return;
-        }
-        
-        let html = '';
-        appointments.forEach(appointment => {
-            html += `
+            const list = document.getElementById('appointmentsList');
+            
+            // Тестовые данные
+            list.innerHTML = `
                 <div class="appointment-item">
                     <div class="appointment-header">
-                        <span class="appointment-title">${appointment.procedure_name}</span>
-                        <span class="status-badge status-confirmed">${appointment.status}</span>
+                        <span class="appointment-title">Классический массаж</span>
+                        <span class="status-badge status-confirmed">Подтверждено</span>
                     </div>
-                    <div class="appointment-date">📅 ${appointment.appointment_date}</div>
-                    <div>👤 ${appointment.user_name} (${appointment.user_username})</div>
-                    <div>💰 ${appointment.procedure_price} руб | ⏰ ${appointment.procedure_duration} мин</div>
+                    <div class="appointment-date">📅 15.08.2024 ⏰ 14:00</div>
+                    <div>👤 Иван Петров (@ivanpetrov)</div>
+                    <div>💰 1000 руб | ⏰ 60 мин</div>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-success" style="padding: 8px; margin: 2px;">✅ Завершить</button>
+                        <button class="btn btn-danger" style="padding: 8px; margin: 2px;">❌ Отменить</button>
+                    </div>
+                </div>
+                
+                <div class="appointment-item">
+                    <div class="appointment-header">
+                        <span class="appointment-title">Озонотерапия</span>
+                        <span class="status-badge status-confirmed">Подтверждено</span>
+                    </div>
+                    <div class="appointment-date">📅 15.08.2024 ⏰ 16:00</div>
+                    <div>👤 Мария Сидорова (@mariasid)</div>
+                    <div>💰 2000 руб | ⏰ 30 мин</div>
                     <div style="margin-top: 10px;">
                         <button class="btn btn-success" style="padding: 8px; margin: 2px;">✅ Завершить</button>
                         <button class="btn btn-danger" style="padding: 8px; margin: 2px;">❌ Отменить</button>
                     </div>
                 </div>
             `;
-        });
-        
-        list.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading appointments:', error);
-        list.innerHTML = '<div class="error">Ошибка загрузки записей</div>';
-    }
-}
+        }
         
         // Загрузка процедур
         async function loadProcedures() {
